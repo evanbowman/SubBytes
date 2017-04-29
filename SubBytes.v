@@ -93,34 +93,37 @@ module SBox(in, out);
      endcase // case (in)
 endmodule // SBox
 
-module SBoxPredictor(in, out);
+
+module SBoxPredictor(in, omega);
    input      [7:0] in;
-   wire       [7:0] sbOut;
-   output reg [3:0] out;
-   SBox sb(in, sbOut);
+   wire       [7:0] sb;
+   output reg [3:0] omega;
+   SBox sbox(in, sb);
    /* -------------------
-    Parity Matrix:
-    
-    | 1 1 1 1 |
-    | 1 1 1 0 |
-    | 0 1 1 1 |
-    | 1 1 0 1 |
-    | 1 0 1 1 |
-    | 1 1 0 0 |
-    | 0 0 1 1 |
-    | 0 1 1 0 |
-    
+   Encoding:                     | 1 1 1 1 |
+                                 | 1 1 1 0 |
+                                 | 0 1 1 1 |
+   | x7 x6 x5 x4 x3 x2 x1 x0 | * | 1 1 0 1 | = | w3 w2 w1 w0 |
+                                 | 1 0 1 1 |
+                                 | 1 1 0 0 |
+                                 | 0 0 1 1 |
+                                 | 0 1 1 0 |
     -------------------- */
-   always @ (sbOut) begin
-      
+   always @ (sb) begin
+      omega[3] <= sb[7] ^ sb[6] ^ sb[4] ^ sb[3] ^ sb[2];      
+      omega[2] <= sb[7] ^ sb[6] ^ sb[5] ^ sb[4] ^ sb[2] ^ sb[0];
+      omega[1] <= sb[7] ^ sb[6] ^ sb[5] ^ sb[3] ^ sb[1] ^ sb[0];
+      omega[0] <= sb[7] ^ sb[5] ^ sb[4] ^ sb[3] ^ sb[1];
    end
 endmodule // SBoxPredictor
+
 
 module SubBytes(in, out, error);
    input  [7:0] in;
    output [7:0] out;
-   output       error;
+   output reg   error;
    wire   [3:0] omega;
+   reg    [3:0] S;
    SBox sb(in, out);
    SBoxPredictor sbp(in, omega);
    /* -------------------
@@ -134,9 +137,14 @@ module SubBytes(in, out, error);
            -P'             I
     -------------------- */
    always @ (omega) begin
-      
+      S[3] = out[7] ^ out[6] ^ out[4] ^ out[3] ^ out[2] ^ omega[3];
+      S[2] = out[7] ^ out[6] ^ out[5] ^ out[4] ^ out[2] ^ out[0] ^ omega[2];
+      S[1] = out[7] ^ out[6] ^ out[5] ^ out[3] ^ out[1] ^ out[0] ^ omega[1];
+      S[0] = out[7] ^ out[5] ^ out[4] ^ out[3] ^ out[1] ^ omega[0];
+      error = S != 0;
    end
 endmodule // SubBytes
+
 
 module TestBench();
    reg  [7:0] in;
