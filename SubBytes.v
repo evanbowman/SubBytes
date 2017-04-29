@@ -139,12 +139,13 @@ module SubBytesHammingChecker(in, S);
    end
 endmodule // SubBytesHammingDecoder
 
+
 module SubBytesHammingTestBench();
    reg  [7:0] in;
    wire [7:0] out;
    wire [3:0] w, S;
    reg [11:0] checkerInput;
-   reg        i;
+   reg        i, j;
    SubBytes sb(in, out);
    SubBytesHammingPredictor sbhp(in, w);
    SubBytesHammingChecker sbhc(checkerInput, S);
@@ -155,13 +156,16 @@ module SubBytesHammingTestBench();
          #1;
          checkerInput = {out, w};
          #1;
-         if (S != 0) $display("Error: SubBytes logic fundamentally broken.");
+         if (S != 0) begin
+            $display("Error: SubBytes logic fundamentally broken.");
+            $finish;
+         end
          in = in + 1;
       end
       $display("Passed!");
-
-      $display("\nSyndrome tests for one error...");
+      
       in = 0;
+      $display("\nSyndrome tests for one error...");
       repeat (256) begin
          i = 0;
          repeat (12) begin
@@ -170,10 +174,20 @@ module SubBytesHammingTestBench();
             checkerInput = {out, w};
             checkerInput[i] = ~checkerInput[i];
             #1;
-            if (S == 0) $display("Error: single bit error somehow masked");
+            if (S == 0) begin
+               $display("Error: single bit error somehow masked");
+               $finish;
+            end
             i = i + 1;
          end
          in = in + 1;
+      end
+      $display("Passed!");
+
+      in = 0;
+      $display("\nSyndrome tests for two errors...");
+      repeat (256) begin
+         
       end
       $display("Passed!");
    end
