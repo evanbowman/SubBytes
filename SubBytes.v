@@ -94,7 +94,7 @@ module SBox(in, out);
 endmodule // SBox
 
 
-module SBoxPredictor(in, omega);
+module SBoxHammingPredictor(in, omega);
    input      [7:0] in;
    wire       [7:0] sb;
    output reg [3:0] omega;
@@ -125,7 +125,7 @@ module SubBytes(in, out, error);
    wire   [3:0] omega;
    reg    [3:0] S;
    SBox sb(in, out);
-   SBoxPredictor sbp(in, omega);
+   SBoxHammingPredictor sbp(in, omega);
    /* -------------------
     Check Matrix:
     
