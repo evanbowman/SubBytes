@@ -1,4 +1,4 @@
-module SBox(in, out);
+module SubBytes(in, out);
    input  [7:0] in;
    output [7:0] out;
    reg    [7:0] out;
@@ -91,14 +91,14 @@ module SBox(in, out);
        8'hfc: out = 8'hb0;       8'hfd: out = 8'h54;       8'hfe: out = 8'hbb;
        8'hff: out = 8'h16;
      endcase // case (in)
-endmodule // SBox
+endmodule // SubBytes
 
 
-module SBoxHammingPredictor(in, omega);
+module SubBytesHammingPredictor(in, w);
    input      [7:0] in;
-   wire       [7:0] sb;
-   output reg [3:0] omega;
-   SBox sbox(in, sb);
+   wire       [7:0] sbOut;
+   output reg [3:0] w;
+   SubBytes sb(in, sbOut);
    /* -------------------
    Encoding:                     | 1 1 1 1 |
                                  | 1 1 1 0 |
@@ -109,56 +109,72 @@ module SBoxHammingPredictor(in, omega);
                                  | 0 0 1 1 |
                                  | 0 1 1 0 |
     -------------------- */
-   always @ (sb) begin
-      omega[3] <= sb[7] ^ sb[6] ^ sb[4] ^ sb[3] ^ sb[2];      
-      omega[2] <= sb[7] ^ sb[6] ^ sb[5] ^ sb[4] ^ sb[2] ^ sb[0];
-      omega[1] <= sb[7] ^ sb[6] ^ sb[5] ^ sb[3] ^ sb[1] ^ sb[0];
-      omega[0] <= sb[7] ^ sb[5] ^ sb[4] ^ sb[3] ^ sb[1];
+   always @ (sbOut) begin
+      w[3] <= sbOut[7] ^ sbOut[6] ^ sbOut[4] ^ sbOut[3] ^ sbOut[2];      
+      w[2] <= sbOut[7] ^ sbOut[6] ^ sbOut[5] ^ sbOut[4] ^ sbOut[2] ^ sbOut[0];
+      w[1] <= sbOut[7] ^ sbOut[6] ^ sbOut[5] ^ sbOut[3] ^ sbOut[1] ^ sbOut[0];
+      w[0] <= sbOut[7] ^ sbOut[5] ^ sbOut[4] ^ sbOut[3] ^ sbOut[1];
    end
-endmodule // SBoxPredictor
+endmodule // SubBytesHammingPredictor
 
 
-module SubBytes(in, out, error);
-   input  [7:0] in;
-   output [7:0] out;
-   output reg   error;
-   wire   [3:0] omega;
-   reg    [3:0] S;
-   SBox sb(in, out);
-   SBoxHammingPredictor sbp(in, omega);
-   /* -------------------
-    Check Matrix:
-    
-    | 1 1 0 1 1 1 0 0 : 1 0 0 0 |
-    | 1 1 1 1 0 1 0 1 : 0 1 0 0 |
-    | 1 1 1 0 1 0 1 1 : 0 0 1 0 |
-    | 1 0 1 1 1 0 1 0 : 0 0 0 1 |
-      ~~~~~~~~~~~~~~~   ~~~~~~~
-           -P'             I
-    -------------------- */
-   always @ (omega) begin
-      S[3] = out[7] ^ out[6] ^ out[4] ^ out[3] ^ out[2] ^ omega[3];
-      S[2] = out[7] ^ out[6] ^ out[5] ^ out[4] ^ out[2] ^ out[0] ^ omega[2];
-      S[1] = out[7] ^ out[6] ^ out[5] ^ out[3] ^ out[1] ^ out[0] ^ omega[1];
-      S[0] = out[7] ^ out[5] ^ out[4] ^ out[3] ^ out[1] ^ omega[0];
-      error = S != 0;
+module SubBytesHammingChecker(in, S);
+   input [11:0] in;
+   output reg   [3:0]  S;
+   always @ (in) begin
+      /* -------------------
+       Syndrome calculation:
+       
+       | 1 1 0 1 1 1 0 0 : 1 0 0 0 |        | S0 |
+       | 1 1 1 1 0 1 0 1 : 0 1 0 0 |        | S1 |
+       | 1 1 1 0 1 0 1 1 : 0 0 1 0 | * in = | S2 |
+       | 1 0 1 1 1 0 1 0 : 0 0 0 1 |        | S3 |
+         ~~~~~~~~~~~~~~~   ~~~~~~~
+              -P'             I
+       -------------------- */
+      S[0] = in[11] ^ in[10] ^ in[8] ^ in[7] ^ in[6] ^ in[3];
+      S[1] = in[11] ^ in[10] ^ in[9] ^ in[8] ^ in[6] ^ in[4] ^ in[2];
+      S[2] = in[11] ^ in[10] ^ in[9] ^ in[7] ^ in[5] ^ in[4] ^ in[1];
+      S[3] = in[11] ^ in[9] ^ in[8] ^ in[7] ^ in[5] ^ in[0];
    end
-endmodule // SubBytes
+endmodule // SubBytesHammingDecoder
 
-
-module TestBench();
+module SubBytesHammingTestBench();
    reg  [7:0] in;
    wire [7:0] out;
-   wire       error;
-   SubBytes sub(in, out, error);
+   wire [3:0] w, S;
+   reg [11:0] checkerInput;
+   reg        i;
+   SubBytes sb(in, out);
+   SubBytesHammingPredictor sbhp(in, w);
+   SubBytesHammingChecker sbhc(checkerInput, S);
    initial begin
       in = 0;
+      $display("\nSyndrome tests for no errors...");
       repeat (256) begin
-         #20;
-         $display("In:  %x", in);
-         $display("Out: %x", out);
-         $display("Error: %d\n", error);
+         #1;
+         checkerInput = {out, w};
+         #1;
+         if (S != 0) $display("Error: SubBytes logic fundamentally broken.");
          in = in + 1;
       end
+      $display("Passed!");
+
+      $display("\nSyndrome tests for one error...");
+      in = 0;
+      repeat (256) begin
+         i = 0;
+         repeat (12) begin
+            in = 0;
+            #1;
+            checkerInput = {out, w};
+            checkerInput[i] = ~checkerInput[i];
+            #1;
+            if (S == 0) $display("Error: single bit error somehow masked");
+            i = i + 1;
+         end
+         in = in + 1;
+      end
+      $display("Passed!");
    end
-endmodule // TestBench
+endmodule // SubBytesHammingTestBench
