@@ -24,8 +24,8 @@ endmodule // SubBytesHammingPredictor
 
 
 module SubBytesHammingChecker(in, S);
-   input [11:0] in;
-   output reg   [3:0]  S;
+   input     [11:0] in;
+   output reg [3:0] S;
    always @ (in) begin
       /* -------------------
        Syndrome calculation:
