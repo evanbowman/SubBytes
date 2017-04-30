@@ -11,6 +11,13 @@ module FFMul4TestBench();
          $display(" - Error: 8 times 5 in F^4_2 should equal 14");
          $finish;
       end
+      in1 = 15;
+      in2 = 15;
+      #1;
+      if (mulOut != 10) begin
+         $display(" - Error: 15 times 15 in F^4_2 should equal 10");
+         $finish;
+      end
       $display(" - Passed!\n");
    end
 endmodule // FFMul_tb
