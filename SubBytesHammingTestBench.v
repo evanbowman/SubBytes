@@ -22,9 +22,9 @@ module SubBytesHammingTestBench();
          end
          in = in + 1;
       end
-      $display(" - Passed!");      
+      $display(" - Passed!\n");
       in = 0;
-      $display("\n - Syndrome tests for one error...");
+      $display(" - Syndrome tests for one error...");
       repeat (256) begin
          for (i = 0; i < 12; i = i + 1) begin
             #1;
@@ -38,9 +38,9 @@ module SubBytesHammingTestBench();
          end
          in = in + 1;
       end
-      $display(" - Passed!");
+      $display(" - Passed!\n");
       in = 0;
-      $display("\n - Syndrome tests for two errors...");
+      $display(" - Syndrome tests for two errors...");
       repeat (256) begin
          for (i = 0; i < 12; i = i + 1) begin
             for (j = 0; j < i; j = j + 1) begin
@@ -57,6 +57,6 @@ module SubBytesHammingTestBench();
          end
          in = in + 1;
       end
-      $display(" - Passed!");
+      $display(" - Passed!\n");
    end
 endmodule // SubBytesHammingTestBench
