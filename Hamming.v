@@ -44,4 +44,4 @@ module SubBytesHammingChecker(in, S);
       S[2] <= in[11] ^ in[10] ^ in[9] ^ in[7] ^ in[5] ^ in[4] ^ in[1];
       S[3] <= in[11] ^ in[9] ^ in[8] ^ in[7] ^ in[5] ^ in[0];
    end
-endmodule // SubBytesHammingDecoder
+endmodule // SubBytesHammingChecker
