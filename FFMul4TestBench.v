@@ -22,7 +22,7 @@ module FFMul4TestBench();
          $finish;
       end
       $display(" - Success!\n");
-      $display(" - Five times eight is 14");
+      $display(" - Five times eight is fourteen");
       in1 = 5;
       in2 = 8;
       #1;
