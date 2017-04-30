@@ -26,8 +26,7 @@ module SubBytesHammingTestBench();
       in = 0;
       $display("\n - Syndrome tests for one error...");
       repeat (256) begin
-         i = 0;
-         repeat (12) begin
+         for (i = 0; i < 12; i = i + 1) begin
             #1;
             checkerInput = {out, w};
             checkerInput[i] = ~checkerInput[i];
@@ -36,7 +35,6 @@ module SubBytesHammingTestBench();
                $display(" - Error: single bit error somehow masked");
                $finish;
             end
-            i = i + 1;
          end
          in = in + 1;
       end
