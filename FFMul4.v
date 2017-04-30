@@ -58,7 +58,10 @@ module FFMul_K4_Q2(in1, in2, out);
    FFLog_K4_Q2 in2Log(in2, in2LogOut);
    FFAntiLog_K4_Q2 antiLog(antiLogIn, antiLogOut);
    always @ (in1LogOut or in2LogOut) begin
-      antiLogIn <= (in1LogOut + in2LogOut) % 15;
+      // Special case: forward any zero inputs to the output
+      if (in1 == 0 || in2 == 0) out <= 0;
+      // Otherwise perform a field multiplication
+      else antiLogIn <= (in1LogOut + in2LogOut) % 15;
    end
    always @ (antiLogOut) begin
       out <= antiLogOut;
