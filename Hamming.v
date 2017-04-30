@@ -14,6 +14,8 @@ module SubBytesHammingPredictor(in, w);
                                     | 1 1 0 0 |
                                     | 0 0 1 1 |
                                     | 0 1 1 0 |
+                                      ~~~~~~~
+                                         P
        -------------------- */
       w[3] <= sbOut[7] ^ sbOut[6] ^ sbOut[4] ^ sbOut[3] ^ sbOut[2];
       w[2] <= sbOut[7] ^ sbOut[6] ^ sbOut[5] ^ sbOut[4] ^ sbOut[2] ^ sbOut[0];
