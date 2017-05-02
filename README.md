@@ -2,8 +2,11 @@
 
 ## Setup
 
-### iverilog
-Compiling iverilog on linux/unix
+### Downloading iverilog source files
+
+https://sourceforge.net/projects/iverilog/
+
+### Compiling iverilog on linux/unix
 ```bash
 cd # <directory where you downloaded iverilog source code>
 ./configure
@@ -15,7 +18,6 @@ make install
 
 ```bash
 cd # <directory where you downloaded this code>
-make
 make run
 ```
 
